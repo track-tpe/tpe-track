@@ -92,7 +92,7 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:#f0ebe5;min-height:1
   <div id="content" style="display:none;"></div>
 </div>
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyjvRMKUqfBGpmV68iFE0XwkFMu60KnI-266jGFb6SRoak8sBRG6D40SCiqI6nNWxvu/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyrStSCHF8mC-ccBN8C4FicklsW6HntqhDDUAFadxQR9tA7-KtBilln-wwW0hR_Pm8v/exec';
 const CARRIER_COLORS = {'Kerry Express':'#ff6b00','ไปรษณีย์ไทย':'#c41e3a','Flash Express':'#ffc107','J&T Express':'#e53935','Ninja Van':'#7b1fa2','DHL':'#cc9900','SCG Express':'#1565c0'};
 const STATUS_MAP = {transit:{label:'กำลังจัดส่ง',cls:'transit'},delivered:{label:'ได้รับแล้ว',cls:'delivered'},problem:{label:'มีปัญหา',cls:'problem'}};
 
@@ -162,9 +162,36 @@ function render({shipment:s,logs,history}){
       ${s.status==='problem'?`<div class="alert-problem">มีปัญหาในการจัดส่ง — กรุณาติดต่อ TPE โดยตรง${s.note?': '+s.note:''}</div>`:''}
       <div class="timeline"><div class="tl-title">สถานะการจัดส่ง</div>${tlHTML}</div>
     </div>
-    ${s.proof_url?`<div class="card"><div style="padding:14px 18px 14px;"><div class="tl-title" style="margin-bottom:10px;">หลักฐานการส่ง</div><div class="proof-img-container" onclick="window.open('${s.proof_url}','_blank')"><img src="${s.proof_url}" alt="หลักฐาน" onerror="this.style.display='none';this.parentElement.innerHTML='<a href=\\'${s.proof_url}\\' target=\\'_blank\\' style=\\'display:flex;align-items:center;gap:8px;padding:14px;text-decoration:none;color:#1a73e8;font-size:13px;\\'>📎 กดเพื่อดูไฟล์หลักฐาน</a>'"></div></div></div>`:''}
+    ${s.proof_url?`<div class="card"><div style="padding:14px 18px 14px;"><div class="tl-title" style="margin-bottom:10px;">หลักฐานการส่ง</div><div id="proofContent"></div></div></div>`:''}
     ${history.length>0?`<div><div class="section-title">ประวัติเอกสารของ ${s.customer}</div>${history.map(h=>`<a href="/track.html?id=${h.id}" class="hist-item"><div><div class="hist-name">${h.doc_type} — ${h.doc_ref||h.id}</div><div class="hist-sub">${fmtDate(h.sent_date)}</div></div><span class="badge badge-${(STATUS_MAP[h.status]||STATUS_MAP.transit).cls}" style="font-size:11px;"><span class="badge-dot"></span>${(STATUS_MAP[h.status]||STATUS_MAP.transit).label}</span></a>`).join('')}</div>`:''}
   `;
+  if (s.proof_url) {
+    document.getElementById('proofContent').innerHTML = renderProof(s.proof_url);
+  }
+}
+
+function renderProof(url) {
+  const extMatch = url.match(/ext=([a-z0-9]+)/i);
+  const ext = extMatch ? extMatch[1].toLowerCase() : '';
+  const isImage = ['jpg','jpeg','png','gif','webp','bmp'].includes(ext) || (!extMatch && url.includes('thumbnail'));
+  const openUrl = url.includes('/view') 
+    ? url.replace(/[&?]ext=[^&]*/,'')
+    : url.replace(/[&?]ext=[^&]*/,'').replace('thumbnail?id=','uc?export=view&id=');
+  const FILE_LABEL = {
+    pdf:'📄 กดเพื่อเปิด PDF', doc:'📝 กดเพื่อเปิด Word', docx:'📝 กดเพื่อเปิด Word',
+    xls:'📊 กดเพื่อเปิด Excel', xlsx:'📊 กดเพื่อเปิด Excel',
+    zip:'🗜️ กดเพื่อดาวน์โหลด ZIP', rar:'🗜️ กดเพื่อดาวน์โหลด',
+  };
+  const label = FILE_LABEL[ext] || '📎 กดเพื่อดูไฟล์หลักฐาน';
+  if (isImage) {
+    const imgUrl = url.replace(/[&?]ext=[^&]*/,'');
+    return `<div class="proof-img-container" onclick="window.open('${openUrl}','_blank')">
+      <img src="${imgUrl}" alt="หลักฐาน" onerror="this.style.display='none';document.getElementById('proofFallback').style.display='flex'">
+      <a id="proofFallback" href="${openUrl}" target="_blank" style="display:none;align-items:center;gap:8px;padding:14px;text-decoration:none;color:#1a73e8;font-size:13px;">${label}</a>
+    </div>`;
+  }
+  return `<a href="${openUrl}" target="_blank" style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:#f5f5f5;border-radius:12px;text-decoration:none;color:#1a73e8;font-size:14px;font-weight:500;">${label}</a>`;
+}
 }
 
 function fmtDate(d){if(!d)return'—';const dt=new Date(d);if(isNaN(dt))return d;return dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});}
