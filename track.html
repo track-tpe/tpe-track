@@ -97,8 +97,17 @@ const CARRIER_COLORS = {'Kerry Express':'#ff6b00','ไปรษณีย์ไ�
 const STATUS_MAP = {transit:{label:'กำลังจัดส่ง',cls:'transit'},delivered:{label:'ได้รับแล้ว',cls:'delivered'},problem:{label:'มีปัญหา',cls:'problem'}};
 
 function getIdFromUrl(){
-  const p=window.location.pathname.split('/');
-  return p[p.length-1]||new URLSearchParams(window.location.search).get('id');
+  // 1. ลอง query string ก่อน ?id=xxx
+  const qs = new URLSearchParams(window.location.search).get('id');
+  if(qs) return qs;
+  // 2. ลอง path /track/TPE-xxx
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  // หา segment ที่ขึ้นต้นด้วย TPE-
+  const seg = parts.find(p => p.startsWith('TPE-'));
+  if(seg) return seg;
+  // 3. segment สุดท้าย (fallback)
+  const last = parts[parts.length-1];
+  return (last && last !== 'track') ? last : null;
 }
 
 async function loadShipment(){
@@ -154,7 +163,7 @@ function render({shipment:s,logs,history}){
       <div class="timeline"><div class="tl-title">สถานะการจัดส่ง</div>${tlHTML}</div>
     </div>
     ${s.proof_url?`<div class="card"><div style="padding:14px 18px 14px;"><div class="tl-title" style="margin-bottom:10px;">หลักฐานการส่ง</div><div class="proof-img-container" onclick="window.open('${s.proof_url}','_blank')"><img src="${s.proof_url}" alt="หลักฐาน"></div></div></div>`:''}
-    ${history.length>0?`<div><div class="section-title">ประวัติเอกสารของ ${s.customer}</div>${history.map(h=>`<a href="/track/${h.id}" class="hist-item"><div><div class="hist-name">${h.doc_type} — ${h.doc_ref||h.id}</div><div class="hist-sub">${fmtDate(h.sent_date)}</div></div><span class="badge badge-${(STATUS_MAP[h.status]||STATUS_MAP.transit).cls}" style="font-size:11px;"><span class="badge-dot"></span>${(STATUS_MAP[h.status]||STATUS_MAP.transit).label}</span></a>`).join('')}</div>`:''}
+    ${history.length>0?`<div><div class="section-title">ประวัติเอกสารของ ${s.customer}</div>${history.map(h=>`<a href="/track.html?id=${h.id}" class="hist-item"><div><div class="hist-name">${h.doc_type} — ${h.doc_ref||h.id}</div><div class="hist-sub">${fmtDate(h.sent_date)}</div></div><span class="badge badge-${(STATUS_MAP[h.status]||STATUS_MAP.transit).cls}" style="font-size:11px;"><span class="badge-dot"></span>${(STATUS_MAP[h.status]||STATUS_MAP.transit).label}</span></a>`).join('')}</div>`:''}
   `;
 }
 
