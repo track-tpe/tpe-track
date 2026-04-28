@@ -1,1 +1,2 @@
-/track/*  /track.html  200
+/track/:id  /track.html  200
+/track/*    /track.html  200
