@@ -261,13 +261,17 @@ tr:hover td{background:#fdf8f4;}
     <div class="form-grid">
       <div class="form-group">
         <label>ประเภทเอกสาร *</label>
-        <select id="f-doc_type">
+        <select id="f-doc_type" onchange="onDocTypeChange(this)">
           <option value="">เลือก...</option>
         </select>
       </div>
       <div class="form-group">
         <label>เลขที่เอกสาร *</label>
         <input id="f-doc_ref" placeholder="เช่น INV2024-031">
+      </div>
+      <div class="form-group" id="product-name-group" style="display:none;">
+        <label>ชื่อสินค้า</label>
+        <input id="f-product_name" placeholder="เช่น แปรงอุตสาหกรรม">
       </div>
       <div class="form-group">
         <label>ชื่อลูกค้า *</label>
@@ -319,7 +323,7 @@ tr:hover td{background:#fdf8f4;}
 <div class="success-toast" id="toast"></div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyrStSCHF8mC-ccBN8C4FicklsW6HntqhDDUAFadxQR9tA7-KtBilln-wwW0hR_Pm8v/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxTUpeLtLRs7t-olnYrylfz9RxOpdCZhpgXZe5JWUHH8foXjPM_JMaqc9RqPqHGi9bI/exec';
 let ADMIN_PASS = '';
 let ADMIN_USER = 'Admin';
 let shipmentCache = [];
@@ -328,6 +332,12 @@ let attachedFiles = []; // [{name, base64, mime}]
 const STATUS_MAP = {transit:{label:'กำลังจัดส่ง',cls:'transit'},delivered:{label:'ได้รับแล้ว',cls:'delivered'},problem:{label:'มีปัญหา',cls:'problem'}};
 
 // --- AUTOCOMPLETE ---
+function onDocTypeChange(sel) {
+  const show = sel.value === 'ใบส่งสินค้า';
+  document.getElementById('product-name-group').style.display = show ? 'block' : 'none';
+  if (!show) document.getElementById('f-product_name').value = '';
+}
+
 function onCustomerInput(input) {
   const val = input.value.trim().toLowerCase();
   const list = document.getElementById('autocomplete-list');
@@ -466,7 +476,7 @@ function renderTable(items) {
     const si = STATUS_MAP[s.status] || STATUS_MAP.transit;
     return `
       <tr id="row-${s.id}">
-        <td><div class="td-name">${s.doc_type} — ${s.doc_ref||''}</div><div class="td-sub">${s.customer}</div></td>
+        <td><div class="td-name">${s.doc_type === 'ใบส่งสินค้า' && s.product_name ? s.doc_type+' — '+s.product_name : s.doc_type} — ${s.doc_ref||''}</div><div class="td-sub">${s.customer}</div></td>
         <td>${s.carrier}</td>
         <td><span class="trk-pill">${s.tracking_no||'—'}</span></td>
         <td>${fmtDate(s.sent_date)}</td>
@@ -538,6 +548,8 @@ function openModal() {
   attachedFiles = [];
   renderFileList();
   document.getElementById('f-sent_date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('product-name-group').style.display = 'none';
+  document.getElementById('f-product_name').value = '';
   document.getElementById('modalOverlay').classList.add('open');
 }
 function closeModal() {
@@ -557,6 +569,7 @@ async function submitShipment() {
     sent_date: document.getElementById('f-sent_date').value,
     expected_date: document.getElementById('f-expected_date').value,
     note: document.getElementById('f-note').value,
+    product_name: document.getElementById('f-product_name').value,
     created_by: ADMIN_USER,
   };
   if (!body.doc_type || !body.doc_ref || !body.customer || !body.carrier || !body.tracking_no) {
