@@ -192,7 +192,6 @@ function renderProof(url) {
   }
   return `<a href="${openUrl}" target="_blank" style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:#f5f5f5;border-radius:12px;text-decoration:none;color:#1a73e8;font-size:14px;font-weight:500;">${label}</a>`;
 }
-}
 
 function fmtDate(d){if(!d)return'—';const dt=new Date(d);if(isNaN(dt))return d;return dt.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});}
 function copyText(t,btn){navigator.clipboard.writeText(t).then(()=>{const o=btn.textContent;btn.textContent='คัดลอกแล้ว!';btn.style.background='#e8f5e9';btn.style.color='#2e7d32';setTimeout(()=>{btn.textContent=o;btn.style.background='';btn.style.color='';},2000);});}
