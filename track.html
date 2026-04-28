@@ -151,7 +151,7 @@ function render({shipment:s,logs,history}){
   el.innerHTML=`
     <div class="card">
       <div class="card-header">
-        <div><div class="doc-label">${docTitle}</div><div class="doc-name">${s.doc_ref||s.id}</div><div class="doc-sub">${s.customer}</div></div>
+        <div><div class="doc-label">${s.customer}</div><div class="doc-name">${docTitle}</div><div class="doc-sub">${s.doc_ref||s.id}</div></div>
         <span class="badge badge-${si.cls}"><span class="badge-dot"></span>${si.label}</span>
       </div>
       <div class="meta-grid">
