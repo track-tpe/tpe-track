@@ -92,7 +92,7 @@ body{font-family:'Sarabun','Segoe UI',sans-serif;background:#f0ebe5;min-height:1
   <div id="content" style="display:none;"></div>
 </div>
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbyrStSCHF8mC-ccBN8C4FicklsW6HntqhDDUAFadxQR9tA7-KtBilln-wwW0hR_Pm8v/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxTUpeLtLRs7t-olnYrylfz9RxOpdCZhpgXZe5JWUHH8foXjPM_JMaqc9RqPqHGi9bI/exec';
 const CARRIER_COLORS = {'Kerry Express':'#ff6b00','ไปรษณีย์ไทย':'#c41e3a','Flash Express':'#ffc107','J&T Express':'#e53935','Ninja Van':'#7b1fa2','DHL':'#cc9900','SCG Express':'#1565c0'};
 const STATUS_MAP = {transit:{label:'กำลังจัดส่ง',cls:'transit'},delivered:{label:'ได้รับแล้ว',cls:'delivered'},problem:{label:'มีปัญหา',cls:'problem'}};
 
@@ -143,10 +143,15 @@ function render({shipment:s,logs,history}){
     const tc=active?'active':i>=stepDone-1&&s.status!=='delivered'?'pending':'';
     return `<div class="tl-item"><div class="tl-left"><div class="tl-dot ${dc}"></div>${!isLast?'<div class="tl-line"></div>':''}</div><div class="tl-content" style="${isLast?'padding-bottom:0':''}"><div class="tl-event ${tc}">${step.label}</div><div class="tl-desc">${step.desc}</div>${step.time?`<div class="tl-time">${step.time}</div>`:''}</div></div>`;
   }).join('');
+  // ชื่อที่แสดง: ถ้าใบส่งสินค้า → "ใบส่งสินค้า — ชื่อสินค้า", อื่นๆ → doc_type
+  const docTitle = s.doc_type === 'ใบส่งสินค้า' && s.product_name
+    ? `${s.doc_type} — ${s.product_name}`
+    : s.doc_type;
+  // บรรทัดหลัก: เลขที่เอกสาร, บรรทัดรอง: เลขที่เอกสาร (เดิมเป็นชื่อลูกค้า → เปลี่ยนเป็น doc_ref)
   el.innerHTML=`
     <div class="card">
       <div class="card-header">
-        <div><div class="doc-label">${s.doc_type}</div><div class="doc-name">${s.doc_ref||s.id}</div><div class="doc-sub">${s.customer}</div></div>
+        <div><div class="doc-label">${docTitle}</div><div class="doc-name">${s.doc_ref||s.id}</div><div class="doc-sub">${s.customer}</div></div>
         <span class="badge badge-${si.cls}"><span class="badge-dot"></span>${si.label}</span>
       </div>
       <div class="meta-grid">
